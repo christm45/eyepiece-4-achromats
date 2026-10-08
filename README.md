@@ -29,3 +29,8 @@ Les pages 3D ont un bouton **FR / EN** (haut à droite de la vue). / The 3D page
 - Pupille de sortie prise à 4 mm et diaphragme de champ du fourreau 2" à Ø46 (valeurs nominales ; à adapter à votre fourreau).
 
 Aucun résultat de ce dépôt n'a été validé sur le ciel : c'est un outil de conception, pas une garantie de performance.
+
+## Licence / License
+
+MIT : utilisation, copie, modification et partage libres (y compris commercial), en conservant la mention de copyright. Voir `LICENSE`. three.js (`vendor/`) reste sous sa propre licence MIT.
+MIT: free to use, copy, modify and share (commercial use included), keeping the copyright notice. See `LICENSE`. three.js (`vendor/`) keeps its own MIT license.
