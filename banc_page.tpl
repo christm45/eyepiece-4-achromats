@@ -42,9 +42,17 @@ select,input[type=number]{background:#0f151d;color:var(--tx);border:1px solid va
   <h2>Positions sur le rail (ce que vous lisez)</h2>
   <div class="row"><span>Lecture chariot lentille</span><input id="rl" type="range" min="30" max="260" step="0.5" value="60"><output id="rlo"></output></div>
   <div class="row"><span>Lecture chariot écran</span><input id="re" type="range" min="80" max="298" step="0.5" value="225"><output id="reo"></output></div>
-  <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap"><button class="vb" id="af">Mettre au point (écran sur l'image)</button><button class="vb" id="rd">Vue rail</button><button class="vb" id="rv">Vue 3/4</button></div>
+  <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap"><button class="vb" id="af">Mettre au point (écran sur l'image)</button><button class="vb" id="rd">Vue rail</button><button class="vb" id="rv">Vue 3/4</button><button class="vb" id="sv">Vue source</button></div>
   <div class="kpi" id="kpi"></div>
   <p class="note" id="msg"></p>
+
+  <h2>Source LED et masque (simulation)</h2>
+  <div class="row"><span>LED</span><label style="grid-column:2/4"><input type="checkbox" id="led" checked> allumée</label></div>
+  <div class="row"><span>Couleur</span><select id="lc" style="grid-column:2/4"><option value="white" selected>blanche</option><option value="red">rouge</option><option value="green">verte</option><option value="amber">ambre</option></select></div>
+  <div class="row"><span>Masque</span><select id="mt" style="grid-column:2/4"><option value="pin" selected>trou d'épingle</option><option value="cross">croix</option><option value="none">aucun (LED nue Ø5)</option></select></div>
+  <div class="row"><span>Taille du masque (mm)</span><input id="ms" type="range" min="0.2" max="3" step="0.1" value="0.5"><output id="mso"></output></div>
+  <div class="kpi" id="lk"></div>
+  <p class="note" id="lmsg"></p>
 
   <h2>Calculer la focale de VOTRE lentille</h2>
   <div class="row"><span>Diamètre</span><select id="cd" style="grid-column:2/4"><option value="50">Ø50</option><option value="40" selected>Ø40</option><option value="30">Ø30</option></select></div>
@@ -68,6 +76,8 @@ select,input[type=number]{background:#0f151d;color:var(--tx);border:1px solid va
 <script>
 const TITLE_EN = "Focal-length test bench - 3D";
 const DICT = [
+["Source LED et masque (simulation)","LED source and mask (simulation)"],["LED","LED"],["allumée","on"],["Couleur","Colour"],["blanche","white"],["rouge","red"],["verte","green"],["ambre","amber"],
+["Masque","Mask"],["trou d'épingle","pinhole"],["croix","cross"],["aucun (LED nue Ø5)","none (bare Ø5 LED)"],["Taille du masque (mm)","Mask size (mm)"],["Vue source","Source view"],
 ["Oculaire 4 achromats (les focales mesurées s'y entrent)","4-achromat eyepiece (enter the measured focal lengths there)"],
 ["Banc de mesure de focale des achromats","Achromat focal-length test bench"],
 ["Rail gradué 0–305 mm, chariot porte-lentille (Ø50 / Ø40 / Ø30), chariot écran. Source lointaine (≥ 2 m). Simulez une mesure : déplacez l'écran jusqu'à l'image nette.","0–305 mm graduated rail, lens carriage (Ø50 / Ø40 / Ø30), screen carriage. Distant source (≥ 2 m). Simulate a measurement: move the screen until the image is sharp."],
@@ -148,7 +158,13 @@ DATA.parts.forEach(p => {
   const m = new THREE.MeshPhysicalMaterial({ color: p.color, roughness: rail ? 0.42 : 0.38, metalness: rail ? 0.55 : 0.08, clearcoat: rail ? 0.2 : 0.6, clearcoatRoughness: 0.35, envMapIntensity: 0.6, side: THREE.DoubleSide });
   const mesh = new THREE.Mesh(g, m); mesh.castShadow = mesh.receiveShadow = true; scene.add(mesh); PART[p.id] = { mesh, p };
 });
-PART["5_support_source"].mesh.position.x = -120;
+const SRC_D = 150;      // distance lentille -> source DESSINEE (la vraie est u : 2 a 10 m, hors cadre)
+const srcMat = PART["5_support_source"].mesh.material; srcMat.transparent = true; srcMat.opacity = 0.55;
+const COLS = { white: 0xfff1d6, red: 0xff3b30, green: 0x38ff7a, amber: 0xffb000 };
+const glowTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 128; const g = c.getContext("2d"), r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(0.25, "rgba(255,255,255,0.45)"); r.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = r; g.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); })();
+const srcLight = new THREE.PointLight(0xffffff, 0, 700); scene.add(srcLight);
+let srcG = null;
 $("parts").innerHTML = DATA.parts.map(p => `<label><input type="checkbox" data-id="${p.id}" checked><i style="background:#${p.color.toString(16).padStart(6, "0")}"></i>${p.name}</label>`).join("");
 $("parts").addEventListener("change", e => { const q = PART[e.target.dataset.id]; if (q) q.mesh.visible = e.target.checked; });
 
@@ -181,29 +197,68 @@ function draw() {
   PART["3_chariot_lentille"].mesh.position.x = s.carL; PART["4_chariot_ecran"].mesh.position.x = s.carS;
   if (lens) { scene.remove(lens); lens.geometry.dispose(); }
   lens = new THREE.Mesh(lensGeo(s.d, s.t), glass); lens.rotation.z = -Math.PI / 2; lens.position.set(s.xc, M.zax, 0); scene.add(lens);
+  const on = $("led").checked, col = COLS[$("lc").value], mt = $("mt").value, ms = +$("ms").value;
+  const hx = s.xc - SRC_D, xm = hx + M.maskX, zA = M.zax;
+  PART["5_support_source"].mesh.position.x = hx;
+  if (srcG) { scene.remove(srcG); srcG.traverse(o => { o.geometry && o.geometry.dispose(); }); }
+  srcG = new THREE.Group();
+  const emi = new THREE.MeshStandardMaterial({ color: on ? col : 0x888888, emissive: on ? col : 0x000000, emissiveIntensity: on ? 1.6 : 0, transparent: true, opacity: on ? 0.95 : 0.6, roughness: 0.3 });
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 6.1, 32), emi); body.rotation.z = -Math.PI / 2; body.position.set(hx + M.ledSeat + 3.05, zA, 0); srcG.add(body);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(2.5, 32, 16, 0, 2 * Math.PI, 0, Math.PI / 2), emi); dome.rotation.z = -Math.PI / 2; dome.position.set(hx + M.ledSeat + 6.1, zA, 0); srcG.add(dome);
+  const fl = new THREE.Mesh(new THREE.CylinderGeometry(2.9, 2.9, 1.0, 32), emi); fl.rotation.z = -Math.PI / 2; fl.position.set(hx + M.ledSeat + 0.5, zA, 0); srcG.add(fl);
+  const size = mt === "none" ? 5 : ms;                                    // taille de la source vue par la lentille
+  if (mt !== "none") {                                                    // feuille d'alu percee dans la fente du masque
+    const sh = new THREE.Shape(); sh.moveTo(-17.9, 14); sh.lineTo(17.9, 14); sh.lineTo(17.9, M.zax + 16); sh.lineTo(-17.9, M.zax + 16); sh.closePath();
+    const hole = new THREE.Path();
+    if (mt === "pin") hole.absarc(0, zA, ms / 2, 0, 2 * Math.PI, true);
+    else { const a = ms / 2, w = Math.max(0.1, ms / 16); [[w, a], [w, w], [a, w], [a, -w], [w, -w], [w, -a], [-w, -a], [-w, -w], [-a, -w], [-a, w], [-w, w], [-w, a]].forEach(([x, y], i) => i ? hole.lineTo(x, zA + y) : hole.moveTo(x, zA + y)); hole.closePath(); }
+    sh.holes.push(hole);
+    const foil = new THREE.Mesh(new THREE.ShapeGeometry(sh, 24), new THREE.MeshStandardMaterial({ color: 0xc4c9d2, metalness: 0.9, roughness: 0.35, side: THREE.DoubleSide }));
+    foil.rotation.y = Math.PI / 2; foil.position.set(xm, 0, 0); srcG.add(foil);
+  }
+  if (on) {
+    const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: col, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false }));
+    gl.scale.set(18, 18, 1); gl.position.set(xm + 0.4, zA, 0); srcG.add(gl);
+    const cone = (x0, r0, x1, r1) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, x1 - x0, 48, 1, true), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.09, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      m.rotation.z = -Math.PI / 2; m.position.set((x0 + x1) / 2, zA, 0); srcG.add(m); };
+    cone(xm, size / 2, s.xc, s.hAp);                                      // source -> lentille
+    const xe = Math.min(s.xs, s.xi);
+    cone(s.xc, s.hAp, xe, s.hAp * (s.xi - xe) / s.v);                    // lentille -> image (ou ecran)
+    if (s.xs > s.xi) cone(s.xi, 0.05, s.xs, s.hAp * (s.xs - s.xi) / s.v); // apres l'image : le faisceau diverge jusqu'a l'ecran
+  }
+  srcLight.color.setHex(col); srcLight.intensity = on ? 1.1 : 0; srcLight.position.set(xm + 10, zA, 0);
+  scene.add(srcG);
+  const imgD = size * s.v / s.u, spotD = Math.hypot(s.blur, imgD);
   if (rays) { scene.remove(rays); rays.traverse(o => o.geometry && o.geometry.dispose()); }
   rays = new THREE.Group();
   const x0 = s.xc - 120, x1 = Math.max(s.xs + 12, s.xi + 8);
   [[s.hAp, 0xff6b5a], [-s.hAp, 0xff6b5a], [s.hAp * 0.5, 0xffb454], [-s.hAp * 0.5, 0xffb454], [0, 0xffffff]].forEach(([h, col]) => {
-    const h0 = h * (s.u - 120) / s.u, pts = [], P = (x, y) => new THREE.Vector3(x, M.zax + y, 0);
-    pts.push(P(x0, h0), P(s.xc, h));
+    const pts = [], P = (x, y) => new THREE.Vector3(x, M.zax + y, 0);
+    pts.push(P(xm, 0), P(s.xc, h));
     const slope = -h / s.v; pts.push(P(x1, h + slope * (x1 - s.xc)));
     rays.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.9 })));
   });
-  const ok = s.blur < 0.6;
-  const spot = new THREE.Mesh(new THREE.CircleGeometry(Math.max(s.blur / 2, 0.35), 48), new THREE.MeshBasicMaterial({ color: ok ? 0x5ed39a : 0xff5555, transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
+  const ok = spotD < 0.6;
+  const spot = new THREE.Mesh(new THREE.CircleGeometry(Math.max(spotD / 2, 0.35), 48), new THREE.MeshBasicMaterial({ color: ok ? 0x5ed39a : 0xff5555, transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
   spot.rotation.y = Math.PI / 2; spot.position.set(s.xs + 0.02, M.zax, 0); rays.add(spot);
   const foc = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
   foc.position.set(s.xi, M.zax, 0); rays.add(foc);
   scene.add(rays);
   $("hud").innerHTML = LANG === "en"
-    ? `<span class="chip">Lens reading <b>${fmt(s.rl)}</b> mm</span><span class="chip">Screen reading <b>${fmt(s.re)}</b> mm</span><span class="chip">Image <b>${fmt(s.xi - s.xc)}</b> mm from the lens</span><span class="chip">Spot <b>${fmt(s.blur, 1)}</b> mm</span>`
-    : `<span class="chip">Lecture lentille <b>${fmt(s.rl)}</b> mm</span><span class="chip">Lecture écran <b>${fmt(s.re)}</b> mm</span><span class="chip">Image à <b>${fmt(s.xi - s.xc)}</b> mm de la lentille</span><span class="chip">Tache <b>${fmt(s.blur, 1)}</b> mm</span>`;
+    ? `<span class="chip">Lens reading <b>${fmt(s.rl)}</b> mm</span><span class="chip">Screen reading <b>${fmt(s.re)}</b> mm</span><span class="chip">Image <b>${fmt(s.xi - s.xc)}</b> mm from the lens</span><span class="chip">Spot <b>${fmt(spotD, 1)}</b> mm</span>`
+    : `<span class="chip">Lecture lentille <b>${fmt(s.rl)}</b> mm</span><span class="chip">Lecture écran <b>${fmt(s.re)}</b> mm</span><span class="chip">Image à <b>${fmt(s.xi - s.xc)}</b> mm de la lentille</span><span class="chip">Tache <b>${fmt(spotD, 1)}</b> mm</span>`;
   const err = s.fm - s.f;
-  $("kpi").innerHTML = `<div><small>${tr("Focale déduite", "Measured focal length")}</small><b>${fmt(s.fm)} mm</b></div><div><small>${tr("Écart vs réelle", "Error vs actual")}</small><b class="${Math.abs(err) < 1.5 ? "good" : "bad"}">${err >= 0 ? "+" : ""}${fmt(err)}</b></div><div><small>${tr("Tache sur l'écran", "Spot on screen")}</small><b class="${ok ? "good" : "bad"}">${fmt(s.blur, 1)} mm</b></div>`;
+  $("kpi").innerHTML = `<div><small>${tr("Focale déduite", "Measured focal length")}</small><b>${fmt(s.fm)} mm</b></div><div><small>${tr("Écart vs réelle", "Error vs actual")}</small><b class="${Math.abs(err) < 1.5 ? "good" : "bad"}">${err >= 0 ? "+" : ""}${fmt(err)}</b></div><div><small>${tr("Tache sur l'écran", "Spot on screen")}</small><b class="${ok ? "good" : "bad"}">${fmt(spotD, 1)} mm</b></div>`;
   $("msg").innerHTML = ok ? tr("<b class='good'>Image nette</b> : la lecture de l'écran donne la bonne focale.", "<b class='good'>Sharp image</b>: the screen reading gives the right focal length.")
     : (s.xs < s.xi ? tr("L'écran est <b>avant</b> l'image : reculez-le.", "The screen is <b>in front of</b> the image: move it back.") : tr("L'écran est <b>après</b> l'image : avancez-le.", "The screen is <b>behind</b> the image: move it forward.")) + tr(" Si vous lisez ici, la focale déduite sera fausse.", " If you read here, the deduced focal length will be wrong.");
   if (s.xi + SCR_IDX > 298) $("msg").innerHTML = "<span class='bad'>" + tr("L'image tombe au-delà de la butée de l'écran (lecture " + fmt(s.xi + SCR_IDX, 0) + " mm &gt; 298) : reculez le chariot lentille (lecture plus faible) ou mesurez une source plus lointaine.", "The image falls beyond the screen's end stop (reading " + fmt(s.xi + SCR_IDX, 0) + " mm &gt; 298): move the lens carriage back (lower reading) or measure a more distant source.") + "</span>";
+  const ang = size / s.u * 206265;
+  $("lk").innerHTML = `<div><small>${tr("Taille de la source", "Source size")}</small><b>${fmt(size, 1)} mm</b></div><div><small>${tr("Vue depuis la lentille", "Seen from the lens")}</small><b>${fmt(ang, 0)}″</b></div><div><small>${tr("Image sur l'écran", "Image on the screen")}</small><b class="${imgD < 0.25 ? "good" : "bad"}">${fmt(imgD, 3)} mm</b></div>`;
+  $("lmsg").innerHTML = mt === "none" ? tr("<b class='bad'>LED nue</b> : source de 5 mm, image de " + fmt(imgD, 2) + " mm sur l'écran. La mise au point est moins précise ; préférez un masque.", "<b class='bad'>Bare LED</b>: 5 mm source, " + fmt(imgD, 2) + " mm image on the screen. Focusing is less precise; use a mask.")
+    : imgD < 0.25 ? tr("<b class='good'>Source ponctuelle</b> : l'image du masque (" + fmt(imgD, 3) + " mm) est négligeable devant la tache ; la mise au point est limitée par la lentille.", "<b class='good'>Point source</b>: the mask image (" + fmt(imgD, 3) + " mm) is negligible compared with the blur; focusing is limited by the lens.")
+    : tr("<b class='bad'>Masque trop grand</b> : son image fait " + fmt(imgD, 2) + " mm sur l'écran. Réduisez le trou ou éloignez la source.", "<b class='bad'>Mask too large</b>: its image is " + fmt(imgD, 2) + " mm on the screen. Reduce the hole or move the source farther away.");
+  $("lmsg").innerHTML += "<br>" + tr("Dessin hors échelle : la source est tracée à " + SRC_D + " mm de la lentille ; la vraie distance est u = " + s.u + " mm.", "Drawing not to scale: the source is drawn " + SRC_D + " mm from the lens; the real distance is u = " + s.u + " mm.");
+  $("mso").textContent = fmt(ms, 1);
   calc();
 }
 function calc() {
@@ -211,6 +266,7 @@ function calc() {
   const sommet = rl - DIST[d], bfd = (re - SCR_IDX) - sommet, v = bfd + t / 2, f = u * v / (u + v);
   $("ck").innerHTML = `<div><small>${tr("BFD (sommet → écran)", "BFD (vertex → screen)")}</small><b>${fmt(bfd)}</b></div><div><small>${tr("v (plan princ. → écran)", "v (principal plane → screen)")}</small><b>${fmt(v)}</b></div><div><small>${tr("FOCALE f", "FOCAL LENGTH f")}</small><b class="good">${fmt(f)} mm</b></div>`;
 }
+["led", "lc", "mt", "ms"].forEach(id => $(id).addEventListener("input", draw));
 ["dia", "f", "t", "u", "rl", "re"].forEach(id => $(id).addEventListener("input", () => {
   if (id === "rl" && +$("re").value < +$("rl").value + 45) $("re").value = Math.min(298, +$("rl").value + 45);
   draw();
@@ -219,9 +275,10 @@ function calc() {
 $("af").addEventListener("click", () => { const s = state(); $("re").value = Math.min(298, Math.max(80, Math.round((s.xi + SCR_IDX) * 2) / 2)); draw(); });
 const view = (p, t) => { cam.position.set(...p); ctl.target.set(...t); ctl.update(); };
 $("rd").addEventListener("click", () => view([150, 420, 40], [150, 0, 0]));
-$("rv").addEventListener("click", () => view([110, 230, 560], [150, 30, 0]));
+$("sv").addEventListener("click", () => { const s = state(), hx = s.xc - SRC_D; view([hx + 140, M.zax + 45, 150], [hx, M.zax, 0]); });
+$("rv").addEventListener("click", () => view([40, 250, 720], [90, 30, 0]));
 function resize() { const v = $("view"); renderer.setSize(v.clientWidth, v.clientHeight, false); cam.aspect = v.clientWidth / v.clientHeight; cam.updateProjectionMatrix(); }
-addEventListener("resize", resize); view([110, 230, 560], [150, 30, 0]); resize(); draw();
+addEventListener("resize", resize); view([40, 250, 720], [90, 30, 0]); resize(); draw();
 function onLang() { draw(); }
 setLang(LANG);
 let frames = 0;      // en mode test (Chrome headless : window.__errs defini) on s'arrete apres 40 images

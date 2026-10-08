@@ -20,8 +20,9 @@ sur une focale de 160 mm : c'est pourquoi la formule est obligatoire.
    Ø50 → épaulement 1, Ø40 → épaulement 2, Ø30 → épaulement 3. Serrez-la par la tranche avec une vis **M3 en nylon** (2 trous M3 sur le dessus, à tarauder).
    Orientez l'achromat comme il l'était dans les jumelles (côté objet vers la source) ; la focale ne dépend pas du sens, mais l'image est plus nette ainsi.
 4. Chariot écran : glissez une bande de papier sulfurisé dans la fente du haut (c'est le plan de mesure).
-5. Support source : LED 5 mm dans le logement arrière, masque (trou d'épingle dans du papier alu, ou petite croix) dans la fente.
-   Ou utilisez simplement un objet lointain très contrasté. La source doit être à l'axe de la lentille.
+5. Support source (`5_support_source`) : la **LED 5 mm est sur l'axe optique** (z = 52 mm, même hauteur que la lentille ; elle était à 38 mm dans une version précédente). Insérez la LED **par l'arrière**, collerette contre l'épaulement (les fils sortent par la rainure du bas). Devant la pointe, dans la fente de 1,1 mm : un **masque** en papier alu (trou d'épingle ~0,5 mm percé à l'aiguille, ou petite croix). La sortie est évasée : la lumière diverge après le trou.
+   Alimentation : 5 V USB + résistance ~150 Ω (LED blanche, ~12 mA), ou pile 3 V + ~47 Ω. Une LED nue (Ø5) marche aussi (image de ~0,3 mm à 3 m) mais le masque donne une mise au point plus précise.
+   Posez le support sur la table, à 2 m ou plus de la lentille, face au rail, LED à la même hauteur que l'axe du chariot lentille. La page 3D simule la LED, le masque, le faisceau et la taille de l'image du masque sur l'écran.
 
 ## Lecture
 Chaque chariot a une **fenêtre de lecture** de 10 × 23 mm au-dessus de la voie graduée, avec un **fil repère** de 0,8 mm : on lit le trait qui est sous le fil ; les chiffres sont gravés tous les 10 mm et visibles dans la fenêtre (traits tous les mm, plus longs à 5 et 10 mm). Regardez de dessus, à la verticale, pour éviter la parallaxe.

@@ -108,14 +108,24 @@ def chariot_ecran():
     return c
 
 
+MASK_X = 3.55                                   # plan du masque (centre de la fente de 1,1 mm) par rapport a la face avant du montant de la source
+LED_SEAT_X = -6.5                               # appui de la collerette de la LED 5 mm (corps de 8,6 mm : pointe a x = +2,1)
+SRC_TOP = Z_AX + 16.0                           # haut du montant de la source
+
+
 def support_source():
-    """petit support autonome pour une LED 5 mm + masque (trou d'epingle dans du papier alu ou croix)"""
+    """petit support autonome pour une LED 5 mm + masque (trou d'epingle dans du papier alu ou croix).
+    La LED est sur l'axe optique (z = Z_AX, meme hauteur que la lentille : le support pose sur la table comme le rail). LED inseree par l'arriere,
+    collerette contre l'epaulement, masque dans la fente de 1,1 mm devant la pointe, sortie evasee (la lumiere diverge apres le trou d'epingle)."""
     base = box(-35, 35, -35, 35, 0, 4)
-    post = box(-7, 7, -20, 20, 4, 56)
+    post = box(-7, 7, -20, 20, 4, SRC_TOP)
     s = base.union(post)
-    s = s.cut(cx(5.3, -8, 2, 0, 38))                                       # logement LED 5 mm
-    s = s.cut(cx(3.0, 0, 8, 0, 38))                                        # passage vers l'avant
-    s = s.cut(box(3.0, 4.1, -18, 18, 14, 57))                              # fente du masque 1,1 mm
+    s = s.cut(cx(6.2, -9, LED_SEAT_X, 0, Z_AX))                              # logement de la collerette (5,8 mm)
+    s = s.cut(cx(5.3, LED_SEAT_X - 0.01, 2.8, 0, Z_AX))                      # corps de la LED 5 mm
+    s = s.cut(cx(3.0, 2.7, 4.2, 0, Z_AX))                                    # passage jusqu'au masque
+    s = s.cut(cq.Workplane("YZ").workplane(offset=4.1).center(0, Z_AX).circle(1.5).workplane(offset=2.95).circle(7.0).loft(combine=True))   # sortie evasee 3 -> 14 mm
+    s = s.cut(box(MASK_X - 0.55, MASK_X + 0.55, -18, 18, 14, SRC_TOP + 1))   # fente du masque 1,1 mm
+    s = s.cut(box(-8, -6.0, -1.0, 1.0, 4 - 1, Z_AX - 3.0))                   # rainure pour les fils de la LED (derriere)
     return s
 
 
