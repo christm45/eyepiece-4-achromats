@@ -14,7 +14,7 @@
 #parts i{width:11px;height:11px;border-radius:3px;display:inline-block}
 #side{background:var(--pan);border-left:1px solid var(--ln);overflow:auto;padding:14px 16px 40px}
 h1{font-size:16px;margin:0 0 2px}h2{font-size:13px;margin:20px 0 8px;color:var(--ac);text-transform:uppercase;letter-spacing:.06em}
-p{margin:6px 0}.mu{color:var(--mu)}.note{font-size:12px;color:var(--mu)}
+p{margin:6px 0}.mu{color:var(--mu)}.note{font-size:12px;color:var(--mu)}.nav a{color:var(--ac)}
 .row{display:grid;grid-template-columns:128px 1fr 54px;gap:8px;align-items:center;margin:3px 0}
 .row span{font-size:12px;color:var(--mu)}.row output{font-size:12px;text-align:right;color:var(--tx);font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;accent-color:var(--ac)}
@@ -39,6 +39,7 @@ th{color:var(--mu);font-weight:500}tr.b td{color:var(--tx)}td.g{color:var(--ok)}
   <div id="parts"></div></div>
  <div id="side">
   <h1>Oculaire 4 achromats : assemblage et champ</h1>
+  <p class="note nav">→ <a href="banc_focale_3D.html">Banc de mesure de focale (à utiliser avec l'oculaire)</a></p>
   <p class="mu">Paire Ø40 côté focuser 2" + paire Ø30 côté œil. Cotes lues sur vos captures Onshape ; longueurs et épaisseurs de lentilles estimées.</p>
 
   <h2>Vue 3D</h2>
@@ -1483,6 +1484,7 @@ th{color:var(--mu);font-weight:500}tr.b td{color:var(--tx)}td.g{color:var(--ok)}
 <script>
 const TITLE_EN = "4-achromat eyepiece - 3D assembly and field";
 const DICT = [
+["Banc de mesure de focale (à utiliser avec l'oculaire)","Focal-length test bench (to use with the eyepiece)"],
 ["Oculaire 4 achromats : assemblage et champ","4-achromat eyepiece: assembly and field"],
 ['Paire Ø40 côté focuser 2" + paire Ø30 côté œil. Cotes lues sur vos captures Onshape ; longueurs et épaisseurs de lentilles estimées.','Ø40 pair on the 2" focuser side + Ø30 pair on the eye side. Dimensions read from Onshape screenshots; lens lengths and thicknesses are estimated.'],
 ["Vue 3D","3D view"],

@@ -12,7 +12,7 @@
 #parts label{display:flex;align-items:center;gap:7px;padding:1px 0;cursor:pointer}#parts i{width:11px;height:11px;border-radius:3px;display:inline-block}
 #side{background:var(--pan);border-left:1px solid var(--ln);overflow:auto;padding:14px 16px 40px}
 h1{font-size:16px;margin:0 0 2px}h2{font-size:13px;margin:18px 0 8px;color:var(--ac);text-transform:uppercase;letter-spacing:.06em}
-p{margin:6px 0}.mu{color:var(--mu)}.note{font-size:12px;color:var(--mu)}
+p{margin:6px 0}.mu{color:var(--mu)}.note{font-size:12px;color:var(--mu)}.nav a{color:var(--ac)}
 .row{display:grid;grid-template-columns:132px 1fr 62px;gap:8px;align-items:center;margin:3px 0}
 .row span{font-size:12px;color:var(--mu)}.row output{font-size:12px;text-align:right;font-variant-numeric:tabular-nums}
 input[type=range]{width:100%;accent-color:var(--ac)}
@@ -30,6 +30,7 @@ select,input[type=number]{background:#0f151d;color:var(--tx);border:1px solid va
  <div id="view"><canvas id="cv"></canvas><div id="hud"></div><div id="lang"><button data-l="fr">FR</button><button data-l="en">EN</button></div><div id="parts"></div></div>
  <div id="side">
   <h1>Banc de mesure de focale des achromats</h1>
+  <p class="note nav">→ <a href="oculaire_3D.html">Oculaire 4 achromats (les focales mesurées s'y entrent)</a></p>
   <p class="mu">Rail gradué 0–305 mm, chariot porte-lentille (Ø50 / Ø40 / Ø30), chariot écran. Source lointaine (≥ 2 m). Simulez une mesure : déplacez l'écran jusqu'à l'image nette.</p>
 
   <h2>Lentille à mesurer (simulation)</h2>
@@ -67,6 +68,7 @@ select,input[type=number]{background:#0f151d;color:var(--tx);border:1px solid va
 <script>
 const TITLE_EN = "Focal-length test bench - 3D";
 const DICT = [
+["Oculaire 4 achromats (les focales mesurées s'y entrent)","4-achromat eyepiece (enter the measured focal lengths there)"],
 ["Banc de mesure de focale des achromats","Achromat focal-length test bench"],
 ["Rail gradué 0–305 mm, chariot porte-lentille (Ø50 / Ø40 / Ø30), chariot écran. Source lointaine (≥ 2 m). Simulez une mesure : déplacez l'écran jusqu'à l'image nette.","0–305 mm graduated rail, lens carriage (Ø50 / Ø40 / Ø30), screen carriage. Distant source (≥ 2 m). Simulate a measurement: move the screen until the image is sharp."],
 ["Lentille à mesurer (simulation)","Lens to measure (simulation)"],
