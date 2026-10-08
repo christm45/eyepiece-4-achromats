@@ -1446,11 +1446,12 @@ function label(txt, col, w) {                 // etiquette 3D (sprite : reste fa
   sp.scale.set(w, w * 140 / 640, 1); sp.renderOrder = 10; return sp;
 }
 const RUL_L = 320, RUL_W = 18, RUL_PX = 8;     // reglette : longueur (mm), largeur (mm), pixels par mm de la texture
-function rulerTex(f, v) {                      // reglette graduee dont le zero est au plan principal de la lentille ; bande verte jusqu'a f, repere bleu a v
+function rulerTex(f, v, fm) {                      // reglette graduee dont le zero est au plan principal de la lentille ; bande verte jusqu'a f, repere bleu a v
   const c = document.createElement("canvas"); c.width = RUL_L * RUL_PX; c.height = RUL_W * RUL_PX; const g = c.getContext("2d"), H = c.height;
   g.fillStyle = "#e9edf2"; g.fillRect(0, 0, c.width, H);
   g.fillStyle = "#5ed39a"; g.fillRect(0, H - 3.2 * RUL_PX, f * RUL_PX, 3.2 * RUL_PX);                 // longueur f
   g.fillStyle = "#4aa3ff"; g.fillRect(0, H - 6.0 * RUL_PX, v * RUL_PX, 2.0 * RUL_PX);                 // longueur v
+  g.fillStyle = "#ff9f1c"; g.fillRect(fm * RUL_PX - 2, 0, 4, H - 3.2 * RUL_PX);                       // focale deduite des lectures (orange)
   g.fillStyle = "#111"; g.strokeStyle = "#111"; g.textAlign = "center"; g.textBaseline = "top"; g.font = "bold " + 3.4 * RUL_PX + "px system-ui,Segoe UI,sans-serif";
   for (let mm = 0; mm <= RUL_L; mm++) {
     const x = mm * RUL_PX + 1, L = mm % 10 === 0 ? 5.2 : mm % 5 === 0 ? 3.6 : 2.2;
@@ -1539,20 +1540,21 @@ function draw() {
   const foc = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
   foc.position.set(s.xi, M.zax, 0); rays.add(foc);
   scene.add(rays);
-  // reglette de la focale, posee sur la table devant le banc : zero = plan principal de la lentille ; F et v sont lisibles dessus
+  // reglette VOLANTE de la vraie focale : flotte a hauteur de l'axe optique, a cote du faisceau ; zero = plan principal de la lentille.
+  // Bande verte = focale reelle de la lentille (curseur), repere orange = focale deduite des lectures, bande bleue = distance de l'image.
   if (dimG) { scene.remove(dimG); dimG.traverse(o => { o.geometry && o.geometry.dispose(); if (o.material && o.material.map) o.material.map.dispose(); }); }
   dimG = new THREE.Group();
-  const ZR = 52, fmeas = s.fm, xF = s.xc + fmeas, xV = s.xc + s.vm;
-  const rul = new THREE.Mesh(new THREE.PlaneGeometry(RUL_L, RUL_W), new THREE.MeshBasicMaterial({ map: rulerTex(fmeas, s.vm), side: THREE.DoubleSide }));
-  rul.rotation.x = -Math.PI / 2; rul.position.set(s.xc + RUL_L / 2 - 1 / RUL_PX, 0.6, ZR); dimG.add(rul);
-  const edge = new THREE.Mesh(new THREE.BoxGeometry(RUL_L + 2, 0.5, RUL_W + 2), new THREE.MeshStandardMaterial({ color: 0x20262e, metalness: 0.5, roughness: 0.5 })); edge.position.set(s.xc + RUL_L / 2, 0.15, ZR); dimG.add(edge);
-  const pin = (x, col, op) => { const m = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op });
-    dimG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, 1, ZR - RUL_W / 2), new THREE.Vector3(x, 1, 0), new THREE.Vector3(x, M.zax, 0)]), m)); };
-  pin(s.xc, 0xc0392b, 0.5); pin(xF, 0x5ed39a, 0.8); pin(xV, 0x4aa3ff, 0.5);        // reports : zero (lentille), F et image
-  const F = new THREE.Mesh(new THREE.SphereGeometry(1.4, 16, 12), new THREE.MeshBasicMaterial({ color: 0x5ed39a })); F.position.set(xF, M.zax, 0); dimG.add(F);
-  const lf = label("f = " + fmt(fmeas) + " mm", "#5ed39a", 62); lf.position.set(xF, 4, ZR + 24); dimG.add(lf);
-  const lv = label("v = " + fmt(s.vm) + " mm", "#4aa3ff", 54); lv.position.set(xV, 4, ZR - 17); dimG.add(lv);
-  const l0 = label(tr("0 = lentille", "0 = lens"), "#e0705f", 54); l0.position.set(s.xc, 4, ZR + 24); dimG.add(l0);
+  const ZR = 46, xF = s.xc + s.f, xM = s.xc + s.fm, xV = s.xc + s.v;
+  const rul = new THREE.Mesh(new THREE.PlaneGeometry(RUL_L, RUL_W), new THREE.MeshBasicMaterial({ map: rulerTex(s.f, s.v, s.fm), side: THREE.DoubleSide }));
+  rul.rotation.x = -Math.PI / 2; rul.position.set(s.xc + RUL_L / 2 - 1 / RUL_PX, M.zax, ZR); dimG.add(rul);
+  const edge = new THREE.Mesh(new THREE.BoxGeometry(RUL_L + 2, 0.6, RUL_W + 2), new THREE.MeshStandardMaterial({ color: 0x20262e, metalness: 0.5, roughness: 0.5 })); edge.position.set(s.xc + RUL_L / 2, M.zax - 0.5, ZR); dimG.add(edge);
+  const pin = (x, col, op) => dimG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, M.zax, 0), new THREE.Vector3(x, M.zax, ZR - RUL_W / 2)]), new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op })));
+  pin(s.xc, 0xc0392b, 0.7); pin(xF, 0x5ed39a, 0.9); pin(xV, 0x4aa3ff, 0.5);        // reports sur l'axe : lentille, foyer F, image
+  const F = new THREE.Mesh(new THREE.SphereGeometry(1.6, 16, 12), new THREE.MeshBasicMaterial({ color: 0x5ed39a })); F.position.set(xF, M.zax, 0); dimG.add(F);
+  const lf = label(tr("f réelle = " + fmt(s.f, 0) + " mm", "actual f = " + fmt(s.f, 0) + " mm"), "#5ed39a", 78); lf.position.set(xF, M.zax + 17, ZR); dimG.add(lf);
+  const lm = label(tr("mesurée " + fmt(s.fm) + " mm", "measured " + fmt(s.fm) + " mm"), "#ff9f1c", 64); lm.position.set(xM, M.zax - 15, ZR); dimG.add(lm);
+  const lv = label("v = " + fmt(s.v) + " mm", "#4aa3ff", 50); lv.position.set(xV, M.zax + 6, ZR - 18); dimG.add(lv);
+  const l0 = label(tr("0 = lentille", "0 = lens"), "#e0705f", 50); l0.position.set(s.xc, M.zax + 6, ZR + 2); dimG.add(l0);
   scene.add(dimG);
   $("hud").innerHTML = LANG === "en"
     ? `<span class="chip">Lens reading <b>${fmt(s.rl)}</b> mm</span><span class="chip">Screen reading <b>${fmt(s.re)}</b> mm</span><span class="chip">Image <b>${fmt(s.xi - s.xc)}</b> mm from the lens</span><span class="chip">Spot <b>${fmt(spotD, 1)}</b> mm</span>`
