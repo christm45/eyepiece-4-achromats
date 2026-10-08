@@ -172,6 +172,15 @@ const DICT = [
 </script>
 <script>__I18N__</script>
 <script>
+// WebGL indisponible : on l'explique au lieu de laisser une vue noire
+(function () {
+  let ok = false;
+  try { const c = document.createElement("canvas"); ok = !!(c.getContext("webgl2") || c.getContext("webgl")); } catch (e) { }
+  if (!ok) {
+    document.getElementById("view").innerHTML = '<div style="padding:24px;color:#ffb454;max-width:520px;line-height:1.5"><b>WebGL est désactivé ou indisponible dans ce navigateur : la vue 3D ne peut pas s\'afficher.</b><br>Activez l\'accélération matérielle (Chrome : Paramètres → Système → « Utiliser l\'accélération matérielle ») ou essayez un autre navigateur (Chrome, Edge, Firefox récents).<br><br><b>WebGL is disabled or unavailable in this browser: the 3D view cannot be displayed.</b><br>Enable hardware acceleration (Chrome: Settings → System → “Use hardware acceleration”) or try another recent browser (Chrome, Edge, Firefox).</div>';
+    throw new Error("WebGL indisponible");
+  }
+})();
 const DATA = __DATA__;
 const $ = id => document.getElementById(id);
 const dec = b64 => { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return new Float32Array(u.buffer); };
