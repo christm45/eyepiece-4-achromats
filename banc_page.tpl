@@ -164,7 +164,30 @@ const COLS = { white: 0xfff1d6, red: 0xff3b30, green: 0x38ff7a, amber: 0xffb000 
 const glowTex = (() => { const c = document.createElement("canvas"); c.width = c.height = 128; const g = c.getContext("2d"), r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
   r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(0.25, "rgba(255,255,255,0.45)"); r.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = r; g.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); })();
 const srcLight = new THREE.PointLight(0xffffff, 0, 700); scene.add(srcLight);
-let srcG = null;
+let srcG = null, dimG = null;
+function label(txt, col, w) {                 // etiquette 3D (sprite : reste face a la camera)
+  const c = document.createElement("canvas"); c.width = 640; c.height = 140; const g = c.getContext("2d");
+  g.fillStyle = "rgba(11,15,22,0.9)"; g.strokeStyle = col; g.lineWidth = 6;
+  g.beginPath(); if (g.roundRect) g.roundRect(4, 4, 632, 132, 22); else g.rect(4, 4, 632, 132); g.fill(); g.stroke();
+  g.fillStyle = col; g.font = "bold 62px system-ui,Segoe UI,sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(txt, 320, 72);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false }));
+  sp.scale.set(w, w * 140 / 640, 1); sp.renderOrder = 10; return sp;
+}
+const RUL_L = 320, RUL_W = 18, RUL_PX = 8;     // reglette : longueur (mm), largeur (mm), pixels par mm de la texture
+function rulerTex(f, v) {                      // reglette graduee dont le zero est au plan principal de la lentille ; bande verte jusqu'a f, repere bleu a v
+  const c = document.createElement("canvas"); c.width = RUL_L * RUL_PX; c.height = RUL_W * RUL_PX; const g = c.getContext("2d"), H = c.height;
+  g.fillStyle = "#e9edf2"; g.fillRect(0, 0, c.width, H);
+  g.fillStyle = "#5ed39a"; g.fillRect(0, H - 3.2 * RUL_PX, f * RUL_PX, 3.2 * RUL_PX);                 // longueur f
+  g.fillStyle = "#4aa3ff"; g.fillRect(0, H - 6.0 * RUL_PX, v * RUL_PX, 2.0 * RUL_PX);                 // longueur v
+  g.fillStyle = "#111"; g.strokeStyle = "#111"; g.textAlign = "center"; g.textBaseline = "top"; g.font = "bold " + 3.4 * RUL_PX + "px system-ui,Segoe UI,sans-serif";
+  for (let mm = 0; mm <= RUL_L; mm++) {
+    const x = mm * RUL_PX + 1, L = mm % 10 === 0 ? 5.2 : mm % 5 === 0 ? 3.6 : 2.2;
+    g.lineWidth = mm % 10 === 0 ? 3 : 1.6; g.beginPath(); g.moveTo(x, 0); g.lineTo(x, L * RUL_PX); g.stroke();
+    if (mm % 20 === 0 && mm > 0) g.fillText(String(mm), x, 5.6 * RUL_PX);
+  }
+  g.strokeStyle = "#c0392b"; g.lineWidth = 5; g.beginPath(); g.moveTo(2, 0); g.lineTo(2, H); g.stroke();      // zero
+  const t = new THREE.CanvasTexture(c); t.anisotropy = 8; return t;
+}
 $("parts").innerHTML = DATA.parts.map(p => `<label><input type="checkbox" data-id="${p.id}" checked><i style="background:#${p.color.toString(16).padStart(6, "0")}"></i>${p.name}</label>`).join("");
 $("parts").addEventListener("change", e => { const q = PART[e.target.dataset.id]; if (q) q.mesh.visible = e.target.checked; });
 
@@ -244,6 +267,21 @@ function draw() {
   const foc = new THREE.Mesh(new THREE.SphereGeometry(0.9, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
   foc.position.set(s.xi, M.zax, 0); rays.add(foc);
   scene.add(rays);
+  // reglette de la focale, posee sur la table devant le banc : zero = plan principal de la lentille ; F et v sont lisibles dessus
+  if (dimG) { scene.remove(dimG); dimG.traverse(o => { o.geometry && o.geometry.dispose(); if (o.material && o.material.map) o.material.map.dispose(); }); }
+  dimG = new THREE.Group();
+  const ZR = 52, fmeas = s.fm, xF = s.xc + fmeas, xV = s.xc + s.vm;
+  const rul = new THREE.Mesh(new THREE.PlaneGeometry(RUL_L, RUL_W), new THREE.MeshBasicMaterial({ map: rulerTex(fmeas, s.vm), side: THREE.DoubleSide }));
+  rul.rotation.x = -Math.PI / 2; rul.position.set(s.xc + RUL_L / 2 - 1 / RUL_PX, 0.6, ZR); dimG.add(rul);
+  const edge = new THREE.Mesh(new THREE.BoxGeometry(RUL_L + 2, 0.5, RUL_W + 2), new THREE.MeshStandardMaterial({ color: 0x20262e, metalness: 0.5, roughness: 0.5 })); edge.position.set(s.xc + RUL_L / 2, 0.15, ZR); dimG.add(edge);
+  const pin = (x, col, op) => { const m = new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: op });
+    dimG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, 1, ZR - RUL_W / 2), new THREE.Vector3(x, 1, 0), new THREE.Vector3(x, M.zax, 0)]), m)); };
+  pin(s.xc, 0xc0392b, 0.5); pin(xF, 0x5ed39a, 0.8); pin(xV, 0x4aa3ff, 0.5);        // reports : zero (lentille), F et image
+  const F = new THREE.Mesh(new THREE.SphereGeometry(1.4, 16, 12), new THREE.MeshBasicMaterial({ color: 0x5ed39a })); F.position.set(xF, M.zax, 0); dimG.add(F);
+  const lf = label("f = " + fmt(fmeas) + " mm", "#5ed39a", 62); lf.position.set(xF, 4, ZR + 24); dimG.add(lf);
+  const lv = label("v = " + fmt(s.vm) + " mm", "#4aa3ff", 54); lv.position.set(xV, 4, ZR - 17); dimG.add(lv);
+  const l0 = label(tr("0 = lentille", "0 = lens"), "#e0705f", 54); l0.position.set(s.xc, 4, ZR + 24); dimG.add(l0);
+  scene.add(dimG);
   $("hud").innerHTML = LANG === "en"
     ? `<span class="chip">Lens reading <b>${fmt(s.rl)}</b> mm</span><span class="chip">Screen reading <b>${fmt(s.re)}</b> mm</span><span class="chip">Image <b>${fmt(s.xi - s.xc)}</b> mm from the lens</span><span class="chip">Spot <b>${fmt(spotD, 1)}</b> mm</span>`
     : `<span class="chip">Lecture lentille <b>${fmt(s.rl)}</b> mm</span><span class="chip">Lecture écran <b>${fmt(s.re)}</b> mm</span><span class="chip">Image à <b>${fmt(s.xi - s.xc)}</b> mm de la lentille</span><span class="chip">Tache <b>${fmt(spotD, 1)}</b> mm</span>`;
@@ -276,9 +314,9 @@ $("af").addEventListener("click", () => { const s = state(); $("re").value = Mat
 const view = (p, t) => { cam.position.set(...p); ctl.target.set(...t); ctl.update(); };
 $("rd").addEventListener("click", () => view([150, 420, 40], [150, 0, 0]));
 $("sv").addEventListener("click", () => { const s = state(), hx = s.xc - SRC_D; view([hx + 140, M.zax + 45, 150], [hx, M.zax, 0]); });
-$("rv").addEventListener("click", () => view([40, 250, 720], [90, 30, 0]));
+$("rv").addEventListener("click", () => view([60, 260, 800], [130, 30, 0]));
 function resize() { const v = $("view"); renderer.setSize(v.clientWidth, v.clientHeight, false); cam.aspect = v.clientWidth / v.clientHeight; cam.updateProjectionMatrix(); }
-addEventListener("resize", resize); view([40, 250, 720], [90, 30, 0]); resize(); draw();
+addEventListener("resize", resize); view([60, 260, 800], [130, 30, 0]); resize(); draw();
 function onLang() { draw(); }
 setLang(LANG);
 let frames = 0;      // en mode test (Chrome headless : window.__errs defini) on s'arrete apres 40 images
