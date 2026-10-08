@@ -1808,7 +1808,7 @@ addEventListener("resize", resize); drawGroups(); resize(); update(); applyLook(
   }
   renderer.render(scene, cam);
 })();
-const limEn = l => !l ? "-" : l === "lentille de champ" ? "field lens" : l.startsWith("diaphragme de champ") ? 'field stop (2" barrel)' : l;
+function limEn(l) { return !l ? "-" : l === "lentille de champ" ? "field lens" : l.startsWith("diaphragme de champ") ? 'field stop (2" barrel)' : l; }
 function drawHud() { $("hud").innerHTML = LANG === "en"
   ? `<div class="chip">Base <b>Ø50.8</b> · pocket <b>Ø42.5 × 27</b></div><div class="chip">Cap <b>Ø61</b></div><div class="chip">Ring <b>Ø50 × 5.9</b></div><div class="chip">Total height <b>${DATA.stack.top.toFixed(0)} mm</b></div>`
   : `<div class="chip">Base <b>Ø50,8</b> · poche <b>Ø42,5 × 27</b></div><div class="chip">Coiffe <b>Ø61</b></div><div class="chip">Bague <b>Ø50 × 5,9</b></div><div class="chip">Hauteur totale <b>${DATA.stack.top.toFixed(0)} mm</b></div>`; }
