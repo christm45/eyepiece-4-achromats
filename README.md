@@ -3,6 +3,8 @@
 Oculaire de télescope imprimé en 3D, fait de 4 achromats de jumelles : une paire Ø40 mm côté focuser 2" et une paire Ø30 mm côté œil.
 3D-printed telescope eyepiece built from 4 binocular achromats: a Ø40 mm pair on the 2" focuser side and a Ø30 mm pair on the eye side.
 
+**Essayer en ligne / Try it online : https://christm45.github.io/eyepiece-4-achromats/**
+
 Les pages 3D ont un bouton **FR / EN** (haut à droite de la vue). / The 3D pages have an **FR / EN** switch (top right of the view).
 
 ## Contenu / Contents
