@@ -24,9 +24,9 @@ sur une focale de 160 mm : c'est pourquoi la formule est obligatoire.
    Ou utilisez simplement un objet lointain très contrasté. La source doit être à l'axe de la lentille.
 
 ## Lecture
-Chaque chariot a une fente d'index de 1 mm au-dessus de la voie graduée : on lit le trait visible dans la fente.
-- Chariot lentille : la fente est 11,5 / 8,5 / 5,5 mm derrière la face arrière de la lentille (Ø50 / Ø40 / Ø30).
-- Chariot écran : la fente est 8,0 mm derrière le plan du papier.
+Chaque chariot a une **fenêtre de lecture** de 10 × 23 mm au-dessus de la voie graduée, avec un **fil repère** de 0,8 mm : on lit le trait qui est sous le fil ; les chiffres sont gravés tous les 10 mm et visibles dans la fenêtre (traits tous les mm, plus longs à 5 et 10 mm). Regardez de dessus, à la verticale, pour éviter la parallaxe.
+- Chariot lentille : le fil repère est 11,5 / 8,5 / 5,5 mm derrière la face arrière de la lentille (Ø50 / Ø40 / Ø30).
+- Chariot écran : le fil repère est 8,0 mm derrière le plan du papier.
 Notez la lecture du chariot lentille, déplacez l'écran jusqu'à l'image la plus nette (petit point lumineux), notez sa lecture, puis :
 
     python mesure_focale.py 40 60 225 3000 8

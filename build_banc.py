@@ -20,6 +20,7 @@ X_IDX_LENS, X_IDX_SCREEN = 7.5, 8.0             # position de la fente d'index p
 # etages du logement de lentille, depuis la face avant du montant (x = -7) : (diametre, profondeur cumulee)
 STEPS = ((50.4, 3.0), (40.4, 6.0), (30.4, 9.0))
 BORE = 24.0
+WIN_L, WIN_W = 10.0, 23.0                       # fenetre de lecture (le long du rail, en travers) : voit les traits (y -5..5) et les chiffres (y ~8)
 
 
 def box(x0, x1, y0, y1, z0, z1):
@@ -36,7 +37,7 @@ def cz(d, z0, z1, x, y):
 
 
 def graduations(x_a, x_b):
-    """encoches de graduation tous les mm (courtes), 5 mm (moyennes), 10 mm (longues) + chiffres tous les 50 mm"""
+    """encoches de graduation tous les mm (courtes), 5 mm (moyennes), 10 mm (longues) + chiffres tous les 10 mm"""
     cut = None
     for mm in range(int(x_a), int(x_b) + 1):
         L = 10.0 if mm % 10 == 0 else 6.0 if mm % 5 == 0 else 3.0
@@ -64,7 +65,7 @@ def rail(seg):
         g = graduations(x0 + TONGUE + 1, x1 - 1)
         lo, hi = x0 + TONGUE, x1
     r = r.cut(g)
-    for mm in range(int(lo // 50 + 1) * 50, int(hi), 50):         # chiffres tous les 50 mm
+    for mm in range(int(lo // 10 + 1) * 10, int(hi), 10):         # chiffres tous les 10 mm (lisibles par la fenetre du chariot)
         try:
             txt = cq.Workplane("XY").workplane(offset=RAIL_H - TICK_D).center(mm, 8.2).text(str(mm), 3.2, TICK_D + 0.01, combine=False, halign="center")
             r = r.cut(txt)
@@ -73,17 +74,19 @@ def rail(seg):
     return r
 
 
-def chariot_base(index_x):
-    """cavalier qui chevauche le rail, avec fente d'index de 1 mm au-dessus de la voie graduee"""
+def chariot_base(index_x, x_left):
+    """cavalier qui chevauche le rail, avec une fenetre de lecture au-dessus de la voie graduee : on voit les traits ET les chiffres
+    (10 x 23 mm, de x_left a x_left + 10) et un fil repere de 0,8 mm (pont de 1,2 mm de haut) place exactement sur index_x"""
     w = RAIL_W / 2 + JEU
     blk = box(-CAR_L / 2, CAR_L / 2, -w - WALL, w + WALL, 0, CAR_Z)
     blk = blk.cut(box(-CAR_L / 2 - 1, CAR_L / 2 + 1, -w, w, -1, RAIL_H + JEU))
-    blk = blk.cut(box(index_x - 0.5, index_x + 0.5, -6.0, 6.0, RAIL_H, CAR_Z + 1))    # fente d'index
+    blk = blk.cut(box(x_left, x_left + WIN_L, -WIN_W / 2, WIN_W / 2, RAIL_H, CAR_Z + 1))      # fenetre de lecture
+    blk = blk.union(box(index_x - 0.4, index_x + 0.4, -WIN_W / 2 - 0.5, WIN_W / 2 + 0.5, CAR_Z - 1.2, CAR_Z))   # fil repere (sur l'axe de l'ancienne fente)
     return blk
 
 
 def chariot_lentille():
-    c = chariot_base(X_IDX_LENS)
+    c = chariot_base(X_IDX_LENS, T_POST / 2 + 0.0)
     post = box(-T_POST / 2, T_POST / 2, -31.0, 31.0, CAR_Z - 0.5, Z_AX + 31.0)
     c = c.union(post)
     x_f = -T_POST / 2
@@ -97,7 +100,7 @@ def chariot_lentille():
 
 
 def chariot_ecran():
-    c = chariot_base(X_IDX_SCREEN)
+    c = chariot_base(X_IDX_SCREEN, 3.5)
     fr = box(-3.0, 3.0, -35.0, 35.0, CAR_Z - 0.5, Z_AX + 33.0)
     c = c.union(fr)
     c = c.cut(box(-4, 4, -28, 28, Z_AX - 28, Z_AX + 28))                   # fenetre 56 x 56

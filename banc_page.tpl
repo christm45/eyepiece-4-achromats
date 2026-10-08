@@ -55,7 +55,7 @@ select,input[type=number]{background:#0f151d;color:var(--tx);border:1px solid va
 
   <h2>Méthode</h2>
   <div class="card"><b>1.</b> Posez la lentille dans le logement étagé <i>depuis l'avant</i> (côté source) : Ø50 sur l'épaulement 1, Ø40 sur le 2, Ø30 sur le 3 ; serrez par la tranche (vis nylon M3).</div>
-  <div class="card"><b>2.</b> Visez une source lointaine (≥ 2 m) très contrastée, sur l'axe. Notez la lecture du chariot lentille (trait visible dans la fente d'index).</div>
+  <div class="card"><b>2.</b> Visez une source lointaine (≥ 2 m) très contrastée, sur l'axe. Notez la lecture du chariot lentille (trait sous le fil repère de la fenêtre de lecture ; les chiffres sont tous les 10 mm).</div>
   <div class="card"><b>3.</b> Déplacez le chariot écran jusqu'au plus petit point net sur le calque. Notez sa lecture.</div>
   <div class="card"><b>4.</b> Mesurez u au mètre ruban jusqu'au montant du chariot. Entrez les 4 valeurs ci-dessus : f = u·v ÷ (u + v).</div>
   <div class="warn">Précision : ±0,5 mm par lecture, soit f à ±1 mm. Mesurez deux fois, lentille retournée, et faites la moyenne. Focales jusqu'à ~280 mm sur 305 mm de rail.</div>
@@ -80,7 +80,7 @@ const DICT = [
 ["u source → lentille (mm)","u source → lens (mm)"],["Épaisseur lentille (mm)","Lens thickness (mm)"],
 ["Méthode","Method"],
 ["<b>1.</b> Posez la lentille dans le logement étagé <i>depuis l'avant</i> (côté source) : Ø50 sur l'épaulement 1, Ø40 sur le 2, Ø30 sur le 3 ; serrez par la tranche (vis nylon M3).","<b>1.</b> Place the lens in the stepped seat <i>from the front</i> (source side): Ø50 on shoulder 1, Ø40 on 2, Ø30 on 3; clamp it by the edge (M3 nylon screw)."],
-["<b>2.</b> Visez une source lointaine (≥ 2 m) très contrastée, sur l'axe. Notez la lecture du chariot lentille (trait visible dans la fente d'index).","<b>2.</b> Aim at a high-contrast distant source (≥ 2 m), on axis. Note the lens carriage reading (mark visible in the index slot)."],
+["<b>2.</b> Visez une source lointaine (≥ 2 m) très contrastée, sur l'axe. Notez la lecture du chariot lentille (trait sous le fil repère de la fenêtre de lecture ; les chiffres sont tous les 10 mm).","<b>2.</b> Aim at a high-contrast distant source (≥ 2 m), on axis. Note the lens carriage reading (mark under the hairline of the reading window; numbers every 10 mm)."],
 ["<b>3.</b> Déplacez le chariot écran jusqu'au plus petit point net sur le calque. Notez sa lecture.","<b>3.</b> Move the screen carriage until the smallest sharp spot appears on the tracing paper. Note its reading."],
 ["<b>4.</b> Mesurez u au mètre ruban jusqu'au montant du chariot. Entrez les 4 valeurs ci-dessus : f = u·v ÷ (u + v).","<b>4.</b> Measure u with a tape measure up to the carriage post. Enter the 4 values above: f = u·v ÷ (u + v)."],
 ["Précision : ±0,5 mm par lecture, soit f à ±1 mm. Mesurez deux fois, lentille retournée, et faites la moyenne. Focales jusqu'à ~280 mm sur 305 mm de rail.","Accuracy: ±0.5 mm per reading, i.e. f to ±1 mm. Measure twice, with the lens flipped, and average. Focal lengths up to ~280 mm on a 305 mm rail."],
