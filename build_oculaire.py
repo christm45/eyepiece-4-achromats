@@ -123,11 +123,11 @@ D_OEIL_INT, D_OEIL_EXT, D_OEIL_EMB, PROF_EMB, MARGE_CORNEE = 34.0, 52.0, 50.3, H
 
 
 def oeilleton(er):
-    """Oeilleton d'essai : s'emboite sur la bague (Ø50) et amene le haut a `er` mm de la derniere lentille Ø30
+    """Oeilleton d'essai : s'emboite sur la bague (Ø50) et amene le haut a `er` mm de la derniere SURFACE de la lentille Ø30
     (moins 3 mm : la pupille de l'oeil est ~3 mm derriere la cornee). Le cone du champ a 60 deg y passe largement :
     au haut de l'oeilleton le faisceau est deja etroit (rayon ~ distance a la pupille x rayon lentille / dégagement)."""
     z_bas = Z_COIFFE1 + 2.0 - H_BAGUE
-    z_oeil = (Z_L2_30[0] + Z_L2_30[1]) / 2 + er
+    z_oeil = Z_L2_30[1] + er
     z_haut = z_oeil - MARGE_CORNEE
     body = cyl(D_OEIL_EXT, z_bas, z_haut)
     body = body.cut(cyl(D_OEIL_EMB, z_bas - 1, z_bas + PROF_EMB))
@@ -138,9 +138,9 @@ def oeilleton(er):
 def composants():
     # (nom, groupe, couleur, solide, type)
     return [
-        {"name": "1 base basse Ø50,8 (poche 40 x 27)", "group": "imprime", "color": 0x1f6fb5, "shape": base(), "kind": "print", "dz": 0},
+        {"name": "1 base basse Ø50,8 (poche Ø42,5 x 27)", "group": "imprime", "color": 0x1f6fb5, "shape": base(), "kind": "print", "dz": 0},
         {"name": "2 cale sous la paire Ø40", "group": "imprime", "color": 0xf08a24, "shape": cale(), "kind": "print", "dz": -1},
-        {"name": "3 coiffe oeil (poche 30)", "group": "imprime", "color": 0x16a085, "shape": coiffe(), "kind": "print", "dz": 2},
+        {"name": "3 coiffe oeil (poche Ø33)", "group": "imprime", "color": 0x16a085, "shape": coiffe(), "kind": "print", "dz": 2},
         {"name": "4 bague de serrage cote oeil", "group": "imprime", "color": 0xc8323c, "shape": bague(), "kind": "print", "dz": 3},
         {"name": "5 bague d'espacement paire Ø40", "group": "imprime", "color": 0xe3b23c,
          "shape": bague_espace(D_POCHE40, D_CLAIR40, Z_L1_40, Z_L2_40, 40, True, False), "kind": "print", "dz": 0},

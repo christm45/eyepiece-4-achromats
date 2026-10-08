@@ -1,6 +1,6 @@
 import os
 here = os.path.dirname(os.path.abspath(__file__))
-vendor = r"C:\Users\Bogdan\Desktop\fytsec ino skywatcher\fysetcE4\vendor"
+vendor = os.path.join(here, "vendor")
 rd = lambda p: open(p, encoding="utf8").read()
 safe = lambda s: s.replace("</script", "<\\/script")
 html = rd(os.path.join(here, "page_template.tpl"))

@@ -78,7 +78,7 @@
     }
     const last = sys.L[sys.L.length - 1];
     const BFD = -y / s;                                    // distance depuis la derniere lentille
-    return { EFL, zFocus, BFD, ffd: l0.z - zFocus };
+    return { EFL, zFocus, BFD, ffd: l0.z0 - zFocus };   // BFD : depuis le plan de la derniere lentille mince ; ffd : depuis la 1re surface
   }
 
   // fraction du faisceau (pupille +-p/2) qui passe toutes les ouvertures pour une pente chef s_e
@@ -105,8 +105,10 @@
   function analyze(params) {
     const sys = build(params), fo = firstOrder(sys);
     const last = sys.L[sys.L.length - 1];
-    const ER = sys.p.erOverride > 0 ? sys.p.erOverride : fo.BFD;
-    const zp = last.z + ER;
+    // degagement d'oeil mesure depuis la DERNIERE SURFACE de verre (la lentille mince est au milieu de son epaisseur)
+    const half = last.t / 2;
+    const ER = sys.p.erOverride > 0 ? sys.p.erOverride : fo.BFD - half;
+    const zp = last.z + half + ER;
     const out = { sys, fo, ER, zp, curve: [] };
     let a100 = 0, a50 = 0, lim = null;
     for (let deg = 0; deg <= 45; deg += 0.25) {

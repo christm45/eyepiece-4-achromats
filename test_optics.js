@@ -23,7 +23,7 @@ for (const a of [29, 31, 33, 35, 37]) row("ouverture oeil Ø" + a, { a30: a });
 console.log("\n--- piste 2 : degagement d'oeil impose (compromis) ---");
 for (const er of [0, 25, 20, 15, 10]) row("degagement " + (er || "libre"), { erOverride: er });
 
-console.log("\n--- piste 3 : 4 achromats Ø40 (reference 38 mm / 60°) ---");
+console.log("\n--- piste 3 : 4 achromats Ø40 (4 x Ø40 : F et champ vs focales de jumelles) ---");
 row("quad Ø40, f40=160", { quad40: true });
 row("quad Ø40, f40=100", { quad40: true, f40: 100 });
 
